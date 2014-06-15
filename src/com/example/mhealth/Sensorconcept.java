@@ -19,6 +19,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.os.Bundle;
+import org.json.simple.parser.JSONParser;
+
 
 
 import android.content.pm.ActivityInfo;
@@ -101,28 +103,33 @@ public class Sensorconcept extends ActionBarActivity {
 		HttpEntity responseEntity = httpResponse.getEntity();
 		String str = inputStreamToString(responseEntity.getContent()).toString();
 		httpClient.getConnectionManager().shutdown();
+
 		return str;  
 		         
     	} 
-	public static String JsonParse(String str) throws JSONException
+	public static StringBuffer JsonParse(String str) throws JSONException
 	{ 
-		String res=null;
+		StringBuffer res=new StringBuffer();
+		StringBuffer r=new StringBuffer();
 		JSONObject jo = new JSONObject(str);
 		// get n array from json object
 		JSONArray concept=(JSONArray)jo.get("concepts");
 		for(int i=0;i<concept.length();i++)
-		{ //System.out.println(concept.get(i));
+		{ ;
        JSONObject row=concept.getJSONObject(i);
-		res=row.getString("name");
-		res=res.concat("*");
+		res=new StringBuffer(row.getString("display"));
+		
+		r=r.append(res);
+		r=r.append("*");
 		}
 
-	return res;
+	return r;
 	}
 	
 private  class MyAsyncTask extends AsyncTask<String, String, String>{
 		
-		String res1,res2;
+		StringBuffer res1;
+		
 		  @Override
 		  protected String doInBackground(String... params) {
 			  
@@ -130,7 +137,7 @@ private  class MyAsyncTask extends AsyncTask<String, String, String>{
 				   
 				   res1 = JsonParse(Httpget(params[0],params[1], params[2],params[3]));
 				  
-				  
+				
 				   
 			} catch (ClientProtocolException e) {
 				// TODO Auto-generated catch block
@@ -143,23 +150,24 @@ private  class MyAsyncTask extends AsyncTask<String, String, String>{
 				e.printStackTrace();
 			}
 		       
-				return res1;
+				return new String(res1);
 		  }
 		  
 		  
 		  protected void onPostExecute(String params){
-			 
-			  if(params.equals("zero"))
-			  {
+			
+			  if(params==null)
+			  {System.out.println("params"+params);
 				  Toast.makeText(getApplicationContext(),"No Concepts found.", Toast.LENGTH_LONG).show();
 			  }
 			  
 			  else{
-			try{	
-			  
-	      String arrayString[] = params.split("*");
+		
+				  
+				  String r=params;
+	      String arrayString[] = r.split("\\*");
 	
-          int size=params.length();
+          int size=arrayString.length;
 
 	 
 	 
@@ -169,16 +177,14 @@ private  class MyAsyncTask extends AsyncTask<String, String, String>{
 		 final EditText rowedit = new EditText(Sensorconcept.this);
 		 rowTextView.setText(arrayString[i]);
 		 main1.addView(rowTextView);
+		 main1.addView(rowedit);
 		 
 	 }
 	  
 	
 		  
 	
-			  }catch(Exception e)
-			  {
-				  Toast.makeText(getApplicationContext(),"Exception.", Toast.LENGTH_LONG).show();
-			  }
+			 
 		  }
 		  }	  
 		  
@@ -194,10 +200,7 @@ OnClickListener listener2 = new OnClickListener(){
 	@Override
 public void onClick(View v)
 {
-	query=sensor.getText().toString();
-	
-	
-			
+	query=sensor.getText().toString();	
 	  new MyAsyncTask().execute(username,password,url,query);
 	
 	 
